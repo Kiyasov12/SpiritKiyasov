@@ -28,8 +28,10 @@ app.use(session({
 }));
 
 const authRoutes = require('./routes/auth');
-
 app.use('/api/auth', authRoutes);
+
+const profileRoutes = require('./routes/profile');
+app.use('/api/profile', profileRoutes);
 
 app.listen(PORT, () => {
     console.log(`Сервер запущен: http://localhost:${PORT}`);

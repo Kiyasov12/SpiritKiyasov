@@ -113,39 +113,162 @@ if (loginForm) {
 }
 
 // Загрузка профиля
+
+function formatDate(value) {
+    if (!value) return '—';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return String(value);
+    }
+
+    return date.toLocaleDateString('ru-RU');
+}
+
+function formatDateTime(value) {
+    if (!value) return '—';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return String(value);
+    }
+
+    return date.toLocaleString('ru-RU');
+}
+
+function showList(containerId, items, renderItem, emptyText) {
+    const container = document.getElementById(containerId);
+    container.replaceChildren();
+
+    if (!items || items.length === 0) {
+        container.textContent = emptyText;
+        return;
+    }
+
+    items.forEach((item) => {
+        const element = document.createElement('div');
+        element.className = 'data-item';
+
+        // renderItem создаёт безопасные DOM-элементы
+        renderItem(element, item);
+        container.appendChild(element);
+    });
+}
+
+function addLine(container, label, value, accent = false) {
+    const line = document.createElement('div');
+    const title = document.createElement('strong');
+    const text = document.createElement('span');
+
+    title.textContent = label + ': ';
+    text.textContent = value ?? '—';
+
+    if (accent) {
+        text.className = 'accent';
+    }
+
+    line.append(title, text);
+    container.appendChild(line);
+}
+
+// Загрузка профиля
 const profileLogin = document.getElementById('profileLogin');
 
 if (profileLogin) {
     async function loadProfile() {
-        try {
-            const result = await sendRequest('/api/auth/me');
-            const user = result.user || result;
+        const message = document.getElementById('profileMessage');
 
-            if (!user || !user.login) {
-                throw new Error('Не удалось получить данные пользователя');
-            }
+        try {
+            const result = await sendRequest('/api/profile');
+            const user = result.user;
 
             profileLogin.textContent = user.login;
-
             document.getElementById('profileRole').textContent =
                 user.role || 'Пользователь';
 
             document.getElementById('profileAvatar').textContent =
                 user.login.charAt(0).toUpperCase();
+
+            const client = result.client;
+
+            if (client) {
+                const fullName = [
+                    client.last_name,
+                    client.first_name,
+                    client.middle_name
+                ].filter(Boolean).join(' ');
+
+                document.getElementById('clientName').textContent =
+                    fullName || 'Не указано';
+
+                document.getElementById('clientPhone').textContent =
+                    client.phone || 'Не указан';
+
+                document.getElementById('clientEmail').textContent =
+                    client.email || 'Не указан';
+            } else {
+                document.getElementById('clientName').textContent =
+                    'Аккаунт не связан с клиентом';
+
+                document.getElementById('clientPhone').textContent = '—';
+                document.getElementById('clientEmail').textContent = '—';
+            }
+
+            showList(
+                'membershipsList',
+                result.memberships,
+                (element, item) => {
+                    addLine(element, 'Абонемент', item.membership_name);
+                    addLine(element, 'Начало', formatDate(item.start_date));
+                    addLine(element, 'Окончание', formatDate(item.end_date));
+                    addLine(element, 'Статус', item.status, true);
+                    addLine(
+                        element,
+                        'Стоимость',
+                        `${item.price_at_purchase} ₽`
+                    );
+                },
+                'Абонементов пока нет.'
+            );
+
+            showList(
+                'visitsList',
+                result.visits,
+                (element, item) => {
+                    addLine(element, 'Дата посещения', formatDateTime(item.visit_time));
+                    addLine(element, 'Абонемент', item.membership_name);
+                    addLine(
+                        element,
+                        'Время выхода',
+                        item.exit_time
+                            ? formatDateTime(item.exit_time)
+                            : 'Ещё не отмечен'
+                    );
+                },
+                'Посещений пока нет.'
+            );
+
+            showList(
+                'paymentsList',
+                result.payments,
+                (element, item) => {
+                    addLine(element, 'Дата', formatDateTime(item.payment_date));
+                    addLine(element, 'Абонемент', item.membership_name);
+                    addLine(element, 'Сумма', `${item.amount} ₽`);
+                    addLine(element, 'Способ оплаты', item.payment_method);
+                    addLine(element, 'Статус', item.status, true);
+                },
+                'Платежей пока нет.'
+            );
         } catch (error) {
-            if (error.message.includes('401')) {
+            if (error.message.toLowerCase().includes('войти')) {
                 window.location.href = 'index.html';
                 return;
             }
 
-            showMessage(
-                document.getElementById('profileMessage'),
-                error.message
-            );
-
-            if (error.message.toLowerCase().includes('войти')) {
-                window.location.href = 'index.html';
-            }
+            showMessage(message, error.message);
         }
     }
 
