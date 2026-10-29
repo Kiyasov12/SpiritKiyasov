@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spirit — Вход</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <main class="auth-page">
+        <section class="auth-card">
+            <a class="logo" href="index.html">SPIRIT<span>.</span></a>
+            <p class="subtitle">ТВОЯ СИЛА. ТВОЙ РЕЗУЛЬТАТ.</p>
+
+            <h1>С возвращением</h1>
+            <p class="description">Войди в свой аккаунт, чтобы продолжить.</p>
+
+            <form id="loginForm">
+                <label for="login">Логин</label>
+                <input
+                    id="login"
+                    name="login"
+                    type="text"
+                    placeholder="Введите логин"
+                    minlength="3"
+                    maxlength="50"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="password">Пароль</label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Введите пароль"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit" id="loginButton">Войти</button>
+                <p id="loginMessage" class="message" aria-live="polite"></p>
+            </form>
+
+            <p class="switch-page">
+                Нет аккаунта?
+                <a href="register.html">Зарегистрироваться</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

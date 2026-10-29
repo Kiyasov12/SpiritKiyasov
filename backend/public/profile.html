@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spirit — Личный кабинет</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="logo" href="profile.html">SPIRIT<span>.</span></a>
+        <button id="logoutButton" class="logout-button" type="button">
+            Выйти
+        </button>
+    </header>
+
+    <main class="profile-page">
+        <section class="profile-card">
+            <p class="subtitle">ЛИЧНЫЙ КАБИНЕТ</p>
+            <h1>Мой профиль</h1>
+            <p class="description">Информация о твоём аккаунте.</p>
+
+            <div class="avatar" id="profileAvatar">S</div>
+
+            <div class="profile-info">
+                <div class="info-row">
+                    <span>Логин</span>
+                    <strong id="profileLogin">Загрузка...</strong>
+                </div>
+                <div class="info-row">
+                    <span>Роль</span>
+                    <strong id="profileRole">Загрузка...</strong>
+                </div>
+                <div class="info-row">
+                    <span>Статус</span>
+                    <strong class="status-active">Авторизован</strong>
+                </div>
+            </div>
+
+            <p id="profileMessage" class="message" aria-live="polite"></p>
+        </section>
+    </main>
+</body>
+</html>
