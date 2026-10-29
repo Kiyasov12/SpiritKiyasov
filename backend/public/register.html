@@ -18,6 +18,39 @@
             <p class="description">Присоединяйся к Spirit.</p>
 
             <form id="registerForm">
+
+                <label for="firstName">Имя</label>
+                <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    placeholder="Твоё имя"
+                    maxlength="100"
+                    autocomplete="given-name"
+                    required
+                >
+
+                <label for="lastName">Фамилия</label>
+                <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    placeholder="Твоя фамилия"
+                    maxlength="100"
+                    autocomplete="family-name"
+                    required
+                >
+
+                <label for="middleName">Отчество (необязательно)</label>
+                <input
+                    id="middleName"
+                    name="middleName"
+                    type="text"
+                    placeholder="Отчество"
+                    maxlength="100"
+                    autocomplete="additional-name"
+                >
+
                 <label for="login">Логин</label>
                 <input
                     id="login"

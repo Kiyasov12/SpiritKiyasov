@@ -52,79 +52,115 @@ const pool = require('../db');
 const router = express.Router();
 
 // РЕГИСТРАЦИЯ
+
 router.post('/register', async (req, res) => {
+    const login = String(req.body.login || '').trim();
+    const password = String(req.body.password || '');
+    const firstName = String(req.body.firstName || '').trim();
+    const lastName = String(req.body.lastName || '').trim();
+    const middleName = String(req.body.middleName || '').trim();
+
+    if (
+        login.length < 3 ||
+        login.length > 50 ||
+        password.length < 8 ||
+        password.length > 72 ||
+        !firstName ||
+        !lastName
+    ) {
+        return res.status(400).json({
+            message: 'Укажи имя, фамилию, логин от 3 до 50 символов и пароль от 8 символов'
+        });
+    }
+
+    const db = await pool.connect();
+
     try {
-        const { login, password } = req.body;
+        await db.query('BEGIN');
 
-        if (typeof login !== 'string' ||
-            typeof password !== 'string') {
-            return res.status(400).json({
-                message: 'Введите логин и пароль'
-            });
-        }
-
-        const cleanLogin = login.trim();
-
-        if (cleanLogin.length < 3 || cleanLogin.length > 50) {
-            return res.status(400).json({
-                message: 'Логин должен содержать от 3 до 50 символов'
-            });
-        }
-
-        if (password.length < 8 || password.length > 72) {
-            return res.status(400).json({
-                message: 'Пароль должен содержать от 8 до 72 символов'
-            });
-        }
-
-        const existingUser = await pool.query(
+        const existingUser = await db.query(
             'SELECT id FROM users WHERE login = $1',
-            [cleanLogin]
+            [login]
         );
 
         if (existingUser.rows.length > 0) {
+            await db.query('ROLLBACK');
             return res.status(409).json({
-                message: 'Этот логин уже занят'
+                message: 'Такой логин уже занят'
             });
         }
 
-        const roleResult = await pool.query(
+        const roleResult = await db.query(
             'SELECT id FROM roles WHERE name = $1',
             ['Пользователь']
         );
 
         if (roleResult.rows.length === 0) {
+            await db.query('ROLLBACK');
             return res.status(500).json({
-                message: 'Роль пользователя не найдена'
+                message: 'Роль пользователя не найдена в базе данных'
             });
         }
 
-        const passwordHash = await bcrypt.hash(password, 12);
-
-        await pool.query(
-            `INSERT INTO users
-                (login, password_hash, role_id, is_active)
-             VALUES ($1, $2, $3, TRUE)`,
-            [cleanLogin, passwordHash, roleResult.rows[0].id]
+        // Создаём клиента
+        const clientResult = await db.query(
+            `INSERT INTO clients (
+                last_name,
+                first_name,
+                middle_name,
+                is_active,
+                created_at
+            )
+            VALUES ($1, $2, $3, TRUE, NOW())
+            RETURNING id`,
+            [
+                lastName,
+                firstName,
+                middleName || null
+            ]
         );
 
-        return res.status(201).json({
+        const clientId = clientResult.rows[0].id;
+
+        // Создаём аккаунт и связываем его с клиентом
+        const passwordHash = await bcrypt.hash(password, 12);
+
+        await db.query(
+            `INSERT INTO users (
+                login,
+                password_hash,
+                role_id,
+                client_id,
+                is_active,
+                created_at
+            )
+            VALUES ($1, $2, $3, $4, TRUE, NOW())`,
+            [
+                login,
+                passwordHash,
+                roleResult.rows[0].id,
+                clientId
+            ]
+        );
+
+        await db.query('COMMIT');
+
+        res.status(201).json({
             message: 'Регистрация прошла успешно'
         });
     } catch (error) {
-        if (error.code === '23505') {
-            return res.status(409).json({
-                message: 'Этот логин уже занят'
-            });
-        }
+        await db.query('ROLLBACK');
 
-        console.error('Ошибка регистрации:', error.message);
+        console.error('Ошибка регистрации:', error);
 
-        return res.status(500).json({
-            message: 'Внутренняя ошибка сервера'
+        res.status(500).json({
+            message: 'Не удалось зарегистрировать пользователя'
         });
+    } finally {
+        db.release();
     }
 });
+
 
 // ВХОД
 router.post('/login', async (req, res) => {

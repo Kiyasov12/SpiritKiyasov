@@ -47,6 +47,9 @@ if (registerForm) {
         const password = document.getElementById('password').value;
         const message = document.getElementById('registerMessage');
         const button = document.getElementById('registerButton');
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const middleName = document.getElementById('middleName').value.trim();
 
         message.textContent = '';
         button.disabled = true;
@@ -56,7 +59,13 @@ if (registerForm) {
             const result = await sendRequest(
                 '/api/auth/register',
                 'POST',
-                { login, password }
+                {
+                    login,
+                    password,
+                    firstName,
+                    lastName,
+                    middleName
+                }
             );
 
             showMessage(
